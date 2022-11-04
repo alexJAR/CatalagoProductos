@@ -82,6 +82,7 @@ public class Principal {
             System.out.print("Ingrese la clasifiación: ");
             clasificacion = sc.nextLine();
 //            sc.nextLine();
+            clasificacion = clasificacion.toUpperCase();
             if (clasificacion.equals("todos") || clasificacion.equals("TODOS")) {
                 valido = true;
             }
