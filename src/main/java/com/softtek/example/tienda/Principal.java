@@ -27,6 +27,7 @@ public class Principal {
     
     static ArrayList<Producto> producto = new ArrayList<Producto>();
     static Scanner sc = new Scanner(System.in);
+    
        
     public static void main(String[] args) {
         //Agregar producto
@@ -43,7 +44,15 @@ public class Principal {
         producto.add(new Periferico("teclado", 1200, 101, id, "Negro", categoriap));//6
         id++;
 
-        menu();
+        Conexion con = Conexion.getInstance();
+        
+        try {
+            con.conectar();
+            con.cerrarConexion();
+        } catch (Exception e) {
+            System.out.println("Error: "+e);
+        }
+//        menu();
 //        String str1 = "+22";
 //        System.out.println(isValidIdentifier(str1));
 //        System.out.println(clasificacion());
