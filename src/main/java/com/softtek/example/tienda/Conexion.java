@@ -33,6 +33,19 @@ public class Conexion {
         return conexion;
     }
     
+    public int ejecutarSentencia(String sentenciaSQL){
+        try {
+            
+            PreparedStatement pstm = conexion.prepareStatement(sentenciaSQL);
+            pstm.execute();
+            return 1;
+            
+        } catch (SQLException e) {
+            System.out.println("Error al ejecutar la sentencia: "+e);
+            return 0;
+        }
+    }
+    
     public void cerrarConexion() throws SQLException{
         try {
             

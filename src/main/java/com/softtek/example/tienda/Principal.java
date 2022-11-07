@@ -11,6 +11,7 @@ import com.softtek.example.model.CategoriaConsola;
 import com.softtek.example.model.CategoriaPeriferico;
 import com.softtek.example.model.CategoriaVJ;
 import com.softtek.example.model.Producto;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.InputMismatchException;
@@ -29,7 +30,7 @@ public class Principal {
     static Scanner sc = new Scanner(System.in);
     
        
-    public static void main(String[] args) {
+    public static void main(String[] args) throws SQLException {
         //Agregar producto
         producto.add(new VideoJuego("nfs", 1000, 312, id, "carreras", "todos", videojuego));//1
         id++;
@@ -48,11 +49,12 @@ public class Principal {
         
         try {
             con.conectar();
-            con.cerrarConexion();
+            
         } catch (Exception e) {
             System.out.println("Error: "+e);
         }
-//        menu();
+        menu();
+        con.cerrarConexion();
 //        String str1 = "+22";
 //        System.out.println(isValidIdentifier(str1));
 //        System.out.println(clasificacion());
@@ -323,6 +325,10 @@ public class Principal {
         //Guarda el juego en el arreglo productos e incrementamos contador id
         id++;
         producto.add(juego);
+        Conexion objCon = Conexion.getInstance();
+        objCon.ejecutarSentencia("INSERT INTO videojuegos (idVideojuego, nombre, precio, categoria, clasificacion, codigo, idCategoria"
+                + ") VALUES(null, '"+nombre+"',"+precio+",'"+tipo+"', '"+clasificacion+"',"+codigo+",1)");
+        
         
     }
     
@@ -388,6 +394,9 @@ public class Principal {
         //Guarda la consola en el arreglo productos
         id++;
         producto.add(consola);
+        Conexion objCon = Conexion.getInstance();
+        objCon.ejecutarSentencia("INSERT INTO consolas (idConsola, nombre, precio, fabricante, almacenamiento, codigo, idCategoria"
+                + ") VALUES(null, '"+nombre+"',"+precio+",'"+compañia+"', '"+capacidad+"',"+codigo+",2)");
     }
     public static void eliminarConsola(int num){
         int aux = num - 1;
@@ -448,6 +457,9 @@ public class Principal {
         Periferico periferico = new Periferico(nombre, precio, codigo, id, color, categoriap);
         id++;
         producto.add(periferico);
+        Conexion objCon = Conexion.getInstance();
+        objCon.ejecutarSentencia("INSERT INTO periferico (idPeriferico, nombre, precio, color, codigo, idCategoria"
+                + ") VALUES(null, '"+nombre+"',"+precio+",'"+color+"',"+codigo+",3)");
     }
     public static void eliminarPeriferico(int num){
         int aux = num - 1;
