@@ -11,6 +11,9 @@ import com.softtek.example.model.CategoriaConsola;
 import com.softtek.example.model.CategoriaPeriferico;
 import com.softtek.example.model.CategoriaVJ;
 import com.softtek.example.model.Producto;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,7 +32,7 @@ public class Principal {
     static ArrayList<Producto> producto = new ArrayList<Producto>();
     static Scanner sc = new Scanner(System.in);
     
-       
+         
     public static void main(String[] args) throws SQLException {
         //Agregar producto
         producto.add(new VideoJuego("nfs", 1000, 312, id, "carreras", "todos", videojuego));//1
@@ -54,7 +57,6 @@ public class Principal {
             System.out.println("Error: "+e);
         }
         menu();
-        con.cerrarConexion();
 //        String str1 = "+22";
 //        System.out.println(isValidIdentifier(str1));
 //        System.out.println(clasificacion());
@@ -142,7 +144,7 @@ public class Principal {
                         System.out.println("Opcion incorrecta, por favor seleccione una opción valida");
                 }
             }catch (Exception e) {
-                System.out.println("Opción invalida, debe ingresar solo numeros");
+                System.out.println("Opción invalida, debe ingresar solo numeros "+e);
                 sc.next();
             }
             
@@ -245,7 +247,7 @@ public class Principal {
                         System.out.println("Opción invalida, seleccione una opción valida");
                 }
             }catch (InputMismatchException e) {
-                    System.out.println("Opcion invalida, debe ingresar un numero");
+                    System.out.println("Opcion invalida, debe ingresar un numero: error: "+e);
                     sc.next();
             }
 //            System.out.println("\nDesea realizar otra opción? (s/n): ");
@@ -294,7 +296,7 @@ public class Principal {
                         System.out.print("Opción invalida, selecciones una opción valida");
                 }
             }catch (InputMismatchException e) {
-                    System.out.println("Opcion invalida, debe ingresar un numero");
+                    System.out.println("Opcion invalida, debe ingresar un numero: "+e);
                     sc.next();
             }
 //            System.out.println("\nDesea realizar otra opción? (s/n): ");
@@ -321,25 +323,58 @@ public class Principal {
         codigo = validarNumero();
         sc.nextLine();
         
-        VideoJuego juego = new VideoJuego(nombre, precio, codigo, id, tipo, clasificacion, videojuego);
-        //Guarda el juego en el arreglo productos e incrementamos contador id
-        id++;
-        producto.add(juego);
-        Conexion objCon = Conexion.getInstance();
-        objCon.ejecutarSentencia("INSERT INTO videojuegos (idVideojuego, nombre, precio, categoria, clasificacion, codigo, idCategoria"
+//        VideoJuego juego = new VideoJuego(nombre, precio, codigo, id, tipo, clasificacion, videojuego);
+//        //Guarda el juego en el arreglo productos e incrementamos contador id
+//        id++;
+//        producto.add(juego);
+        try {
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            PreparedStatement agregar = conx.prepareStatement("INSERT INTO videojuegos (idVideojuego, nombre, precio, categoria, clasificacion, codigo, idCategoria"
                 + ") VALUES(null, '"+nombre+"',"+precio+",'"+tipo+"', '"+clasificacion+"',"+codigo+",1)");
-        
+            agregar.execute();
+            
+            
+            conexion.cerrarConexion();
+        } catch (Exception e) {
+            System.out.println("Error al Agregar: "+e);
+        }
+//        Conexion objCon = Conexion.getInstance();
+//        objCon.ejecutarSentencia("INSERT INTO videojuegos (idVideojuego, nombre, precio, categoria, clasificacion, codigo, idCategoria"
+//                + ") VALUES(null, '"+nombre+"',"+precio+",'"+tipo+"', '"+clasificacion+"',"+codigo+",1)");
         
     }
     
     public static void eliminarVideojuego(int num){
-        int aux = num - 1;
-        if(producto.get(aux) instanceof VideoJuego){
-            VideoJuego v = (VideoJuego) producto.get(aux);
-            System.out.println("El videojuego "+v.getNombre()+" fue eliminado.");
-            producto.remove(aux);
-        }else{
-            System.out.println("Error, ingrese el ID de un videojuego");
+//        int aux = num - 1;
+//        if(producto.get(aux) instanceof VideoJuego){
+//            VideoJuego v = (VideoJuego) producto.get(aux);
+//            System.out.println("El videojuego "+v.getNombre()+" fue eliminado.");
+//            producto.remove(aux);
+//        }else{
+//            System.out.println("Error, ingrese el ID de un videojuego");
+//        }
+        
+        //BD
+        try {
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            
+            PreparedStatement buscar = conx.prepareStatement("SELECT * FROM videojuegos WHERE idVideojuego = ?");
+            buscar.setInt(1, num);
+            ResultSet consulta = buscar.executeQuery();
+            if(consulta.next()){
+            PreparedStatement eliminar = conx.prepareStatement("DELETE FROM videojuegos where idVideojuego = "+num);
+//            eliminar.setString(1, String.valueOf(num));
+            eliminar.executeUpdate();
+            System.out.println("Registro eliminado");
+            }else{
+                System.out.println("Error al eliminar, ID no valido");
+            }
+            
+            conexion.cerrarConexion();
+        } catch (Exception e) {
+            System.out.println("Error al eliminar: "+e);
         }
     }
     
@@ -350,25 +385,69 @@ public class Principal {
         double precio;
         aux = num - 1;
         sc.nextLine();
-        if(producto.get(aux) instanceof VideoJuego){
-            VideoJuego vj = (VideoJuego) producto.get(aux);
-            System.out.print("Nombre anterior: "+vj.getNombre()+"\nNuevo nombre: ");
+//        if(producto.get(aux) instanceof VideoJuego){
+//            VideoJuego vj = (VideoJuego) producto.get(aux);
+//            System.out.print("Nombre anterior: "+vj.getNombre()+"\nNuevo nombre: ");
+//            nombre = sc.nextLine();
+//            System.out.print("Precio anterior: "+vj.getPrecio()+"\nNuevo precio: ");
+//            precio= validarDouble();
+//            sc.nextLine();
+//            System.out.print("Categoria anterior del juego: "+vj.getTipo());
+//            tipo = sc.nextLine();
+//            System.out.print("Clasificacion anterior: "+vj.getClasificacion()+"\nClasificacion nueva: ");
+//            clasificacion = clasificacion();
+//            System.out.print("Codigo anterior del producto: "+vj.getCodigo()+"\nNuevo codigo del juego: ");
+//            codigo = validarNumero();
+//            sc.nextLine();
+//            VideoJuego vj2 = new VideoJuego(nombre, precio, codigo, num, tipo, clasificacion, videojuego);
+//            //Coloca los nuevos valores en la misma posicion del objeto que se selecciono
+//            producto.set(aux, vj2);
+//        }else{
+//            System.out.println("Error, ingrese el ID de un videojuego");
+//        }
+        
+        try {
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            
+            PreparedStatement buscar = conx.prepareStatement("SELECT * FROM videojuegos WHERE idVideojuego = ?");
+            buscar.setInt(1, num);
+            ResultSet consulta = buscar.executeQuery();
+            
+            if(consulta.next()){
+                
+            System.out.print("Nombre anterior: "+consulta.getString(2)+"\nNuevo nombre: ");
             nombre = sc.nextLine();
-            System.out.print("Precio anterior: "+vj.getPrecio()+"\nNuevo precio: ");
+            System.out.print("Precio anterior: "+consulta.getString(3)+"\nNuevo precio: ");
             precio= validarDouble();
             sc.nextLine();
-            System.out.print("Categoria anterior del juego: "+vj.getTipo());
+            System.out.print("Categoria anterior del juego: "+consulta.getString(4)+"\nNueva categoria del juego:");
             tipo = sc.nextLine();
-            System.out.print("Clasificacion anterior: "+vj.getClasificacion()+"\nClasificacion nueva: ");
+            System.out.print("Clasificacion anterior: "+consulta.getString(5)+"\nClasificacion nueva: ");
             clasificacion = clasificacion();
-            System.out.print("Codigo anterior del producto: "+vj.getCodigo()+"\nNuevo codigo del juego: ");
+            System.out.print("Codigo anterior del producto: "+consulta.getString(6)+"\nNuevo codigo del juego: ");
             codigo = validarNumero();
             sc.nextLine();
-            VideoJuego vj2 = new VideoJuego(nombre, precio, codigo, num, tipo, clasificacion, videojuego);
-            //Coloca los nuevos valores en la misma posicion del objeto que se selecciono
-            producto.set(aux, vj2);
-        }else{
-            System.out.println("Error, ingrese el ID de un videojuego");
+            
+            PreparedStatement modificar = conx.prepareStatement("UPDATE videojuegos SET nombre= ?, precio = ?, "
+                    + "categoria = ?, clasificacion = ?, codigo = ? WHERE idVideojuego = ?");
+            modificar.setString(1, nombre);
+            modificar.setDouble(2, precio);
+            modificar.setString(3, tipo);
+            modificar.setString(4, clasificacion);
+            modificar.setInt(5, codigo);
+            modificar.setInt(6, num);
+            
+            modificar.executeUpdate();
+            }else{
+                System.out.println("Error, ID no valido por favor ingrese un ID valido");
+            }
+            
+            
+            
+            conexion.cerrarConexion();
+        } catch (SQLException e) {
+            System.out.println("Error al editar: "+e);
         }
     }
     
@@ -388,24 +467,56 @@ public class Principal {
         System.out.print("Codigo: ");
         codigo = validarNumero();
         sc.nextLine();
-        
-        Consola consola = new Consola(nombre, precio, codigo, id, compañia, capacidad, categoriac);
-        
-        //Guarda la consola en el arreglo productos
-        id++;
-        producto.add(consola);
-        Conexion objCon = Conexion.getInstance();
-        objCon.ejecutarSentencia("INSERT INTO consolas (idConsola, nombre, precio, fabricante, almacenamiento, codigo, idCategoria"
+//        
+//        Consola consola = new Consola(nombre, precio, codigo, id, compañia, capacidad, categoriac);
+//        
+//        //Guarda la consola en el arreglo productos
+//        id++;
+//        producto.add(consola);
+        try {
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            PreparedStatement agregar = conx.prepareStatement("INSERT INTO consolas (idConsola, nombre, precio, fabricante, almacenamiento, codigo, idCategoria"
                 + ") VALUES(null, '"+nombre+"',"+precio+",'"+compañia+"', '"+capacidad+"',"+codigo+",2)");
+            agregar.execute();
+            
+            
+            conexion.cerrarConexion();
+        } catch (Exception e) {
+            System.out.println("Error al Agregar: "+e);
+        }
+//        Conexion objCon = Conexion.getInstance();
+//        objCon.ejecutarSentencia("INSERT INTO consolas (idConsola, nombre, precio, fabricante, almacenamiento, codigo, idCategoria"
+//                + ") VALUES(null, '"+nombre+"',"+precio+",'"+compañia+"', '"+capacidad+"',"+codigo+",2)");
     }
     public static void eliminarConsola(int num){
-        int aux = num - 1;
-        if(producto.get(aux) instanceof Consola){
-            Consola con = (Consola) producto.get(aux);
-            System.out.println("La consola "+con.getNombre()+" fue eliminada.");
-            producto.remove(aux);
-        }else{
-            System.out.println("Error, ingrese el ID de una consola");
+//        int aux = num - 1;
+//        if(producto.get(aux) instanceof Consola){
+//            Consola con = (Consola) producto.get(aux);
+//            System.out.println("La consola "+con.getNombre()+" fue eliminada.");
+//            producto.remove(aux);
+//        }else{
+//            System.out.println("Error, ingrese el ID de una consola");
+//        }
+        try {
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            
+            PreparedStatement buscar = conx.prepareStatement("SELECT * FROM consolas WHERE idConsola = ?");
+            buscar.setInt(1, num);
+            ResultSet consulta = buscar.executeQuery();
+            
+            if(consulta.next()){                     
+            PreparedStatement eliminar = conx.prepareStatement("DELETE FROM consolas where idConsola = "+num);
+            eliminar.executeUpdate();
+                System.out.println("Registro eliminado");
+            
+            }else{
+                System.out.println("Error al eliminar, ID no valido");
+            }
+            conexion.cerrarConexion();
+        } catch (Exception e) {
+            System.out.println("Error al eliminar: "+e);
         }
     }
     
@@ -415,26 +526,69 @@ public class Principal {
         int codigo, aux;
         aux = num - 1;
         sc.nextLine();
-        if(producto.get(aux) instanceof Consola){
-            Consola con = (Consola) producto.get(aux);
+//        if(producto.get(aux) instanceof Consola){
+//            Consola con = (Consola) producto.get(aux);
+//            
+//            System.out.print("Nombre anterior: "+con.getNombre()+"\nNuevo nombre: ");
+//            nombre = sc.nextLine();
+//            System.out.print("Precio anterior: "+con.getPrecio()+"\nNuevo precio: ");
+//            precio = validarDouble();
+//            sc.nextLine();
+//            System.out.print("Compañia anterior: "+con.getCompañia()+"\nCompañia: ");
+//            compañia = sc.nextLine();
+//            System.out.print("Capacidad anterior: "+con.getCapacidad()+"\nCapacidad: ");
+//            capacidad = sc.nextLine();
+//            System.out.print("Codigo anterior: "+con.getCodigo()+"\nNuevo codigo: ");
+//            codigo = validarNumero();
+//            sc.nextLine();
+//            Consola con2 = new Consola(nombre, precio, codigo, num, compañia, capacidad, categoriac);
+//            //Actualia los datos del registro
+//            producto.set(aux, con2);
+//        }else{
+//            System.out.println("Error, debe ingresar el ID de una consola");
+//        }
+        try {
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
             
-            System.out.print("Nombre anterior: "+con.getNombre()+"\nNuevo nombre: ");
+            PreparedStatement buscar = conx.prepareStatement("SELECT * FROM consolas WHERE idConsola = ?");
+            buscar.setInt(1, num);
+            ResultSet consulta = buscar.executeQuery();
+            
+            if(consulta.next()){
+                
+            System.out.print("Nombre anterior: "+consulta.getString(2)+"\nNuevo nombre: ");
             nombre = sc.nextLine();
-            System.out.print("Precio anterior: "+con.getPrecio()+"\nNuevo precio: ");
+            System.out.print("Precio anterior: "+consulta.getString(3)+"\nNuevo precio: ");
             precio = validarDouble();
             sc.nextLine();
-            System.out.print("Compañia anterior: "+con.getCompañia()+"\nCompañia: ");
+            System.out.print("Compañia anterior: "+consulta.getString(4)+"\nCompañia: ");
             compañia = sc.nextLine();
-            System.out.print("Capacidad anterior: "+con.getCapacidad()+"\nCapacidad: ");
+            System.out.print("Capacidad anterior: "+consulta.getString(5)+"\nCapacidad: ");
             capacidad = sc.nextLine();
-            System.out.print("Codigo anterior: "+con.getCodigo()+"\nNuevo codigo: ");
+            System.out.print("Codigo anterior: "+consulta.getString(6)+"\nNuevo codigo: ");
             codigo = validarNumero();
             sc.nextLine();
-            Consola con2 = new Consola(nombre, precio, codigo, num, compañia, capacidad, categoriac);
-            //Actualia los datos del registro
-            producto.set(aux, con2);
-        }else{
-            System.out.println("Error, debe ingresar el ID de una consola");
+            
+            PreparedStatement modificar = conx.prepareStatement("UPDATE consolas SET nombre= ?, precio = ?, "
+                    + "fabricante = ?, almacenamiento = ?, codigo = ? WHERE idConsola = ?");
+            modificar.setString(1, nombre);
+            modificar.setDouble(2, precio);
+            modificar.setString(3, compañia);
+            modificar.setString(4, capacidad);
+            modificar.setInt(5, codigo);
+            modificar.setInt(6, num);
+            
+            modificar.executeUpdate();
+            }else{
+                System.out.println("Error, ID no valido por favor ingrese un ID valido");
+            }
+            
+            
+            
+            conexion.cerrarConexion();
+        } catch (SQLException e) {
+            System.out.println("Error al editar: "+e);
         }
         
     }
@@ -454,21 +608,54 @@ public class Principal {
         codigo = validarNumero();
         sc.nextLine();
         
-        Periferico periferico = new Periferico(nombre, precio, codigo, id, color, categoriap);
-        id++;
-        producto.add(periferico);
-        Conexion objCon = Conexion.getInstance();
-        objCon.ejecutarSentencia("INSERT INTO periferico (idPeriferico, nombre, precio, color, codigo, idCategoria"
+//        Periferico periferico = new Periferico(nombre, precio, codigo, id, color, categoriap);
+//        id++;
+//        producto.add(periferico);
+        try {
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            PreparedStatement agregar = conx.prepareStatement("INSERT INTO periferico (idPeriferico, nombre, precio, color, codigo, idCategoria"
                 + ") VALUES(null, '"+nombre+"',"+precio+",'"+color+"',"+codigo+",3)");
+            agregar.execute();
+            
+            
+            conexion.cerrarConexion();
+        } catch (Exception e) {
+            System.out.println("Error al Agregar: "+e);
+        }
+//        Conexion objCon = Conexion.getInstance();
+//        objCon.ejecutarSentencia("INSERT INTO periferico (idPeriferico, nombre, precio, color, codigo, idCategoria"
+//                + ") VALUES(null, '"+nombre+"',"+precio+",'"+color+"',"+codigo+",3)");
     }
     public static void eliminarPeriferico(int num){
-        int aux = num - 1;
-        if(producto.get(aux) instanceof Periferico){
-            Periferico pf = (Periferico) producto.get(aux);
-            System.out.println("El periferico "+pf.getNombre()+" fue eliminado.");
-            producto.remove(aux);
-        }else{
-            System.out.println("Error, ingrese el ID de un periferico");
+//        int aux = num - 1;
+//        if(producto.get(aux) instanceof Periferico){
+//            Periferico pf = (Periferico) producto.get(aux);
+//            System.out.println("El periferico "+pf.getNombre()+" fue eliminado.");
+//            producto.remove(aux);
+//        }else{
+//            System.out.println("Error, ingrese el ID de un periferico");
+//        }
+        //Eliminar de la BD
+        try {
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            
+            PreparedStatement buscar = conx.prepareStatement("SELECT * FROM periferico WHERE idPeriferico = ?");
+            buscar.setInt(1, num);
+            ResultSet consulta = buscar.executeQuery();
+            
+            if(consulta.next()){
+            PreparedStatement eliminar = conx.prepareStatement("DELETE FROM periferico where idPeriferico = "+num);
+//            eliminar.setString(1, String.valueOf(num));
+            eliminar.executeUpdate();
+            System.out.println("Registro eliminado");
+            }else{
+                System.out.println("Error al eliminar, ID no valido");
+            }
+            conexion.cerrarConexion();
+        } catch (Exception e) {
+            System.out.println("Error al eliminar: "+e);
         }
     }
     
@@ -478,26 +665,58 @@ public class Principal {
         int codigo, aux;
         aux = num - 1;
         sc.nextLine();
-        if(producto.get(aux) instanceof Periferico){
-            Periferico pf = (Periferico) producto.get(aux);
+//        if(producto.get(aux) instanceof Periferico){
+//            Periferico pf = (Periferico) producto.get(aux);
             
-            System.out.print("Nombre anterior: "+pf.getNombre()+"\nNuevo nombre: ");
+
+//            Periferico pf2 = new Periferico(nombre, precio, codigo, num, color, categoriap);
+            //Edita el periferico anterior
+//            producto.set(aux, pf2);
+            
+//        }else{
+//            System.out.println("Error, Debe de ingresar el ID de un periferico");
+//        }
+        
+        try {
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            
+            PreparedStatement buscar = conx.prepareStatement("SELECT * FROM periferico WHERE idPeriferico = ?");
+            buscar.setInt(1, num);
+            ResultSet consulta = buscar.executeQuery();
+            
+            if(consulta.next()){
+                
+            System.out.println("aca igual");
+            System.out.print("Nombre anterior: "+consulta.getString(2)+"\nNuevo nombre: ");
             nombre = sc.nextLine();
-            System.out.print("Precio anterior: "+pf.getPrecio()+"\nNuevo precio: ");
+            System.out.print("Precio anterior: "+consulta.getString(3)+"\nNuevo precio: ");
             precio = validarDouble();
             sc.nextLine();
-            System.out.print("Color anterior: "+pf.getColor()+"\nNuevo color: ");
+            System.out.print("Color anterior: "+consulta.getString(4)+"\nNuevo color: ");
             color = sc.nextLine();
-            System.out.print("Codigo anterior: "+pf.getCodigo()+"\nNuevo codigo: ");
+            System.out.print("Codigo anterior: "+consulta.getString(5)+"\nNuevo codigo: ");
             codigo = validarNumero();
             sc.nextLine();
-
-            Periferico pf2 = new Periferico(nombre, precio, codigo, num, color, categoriap);
-            //Edita el periferico anterior
-            producto.set(aux, pf2);
             
-        }else{
-            System.out.println("Error, Debe de ingresar el ID de un periferico");
+            PreparedStatement modificar = conx.prepareStatement("UPDATE periferico SET nombre= ?, precio = ?, "
+                    + "color = ?, codigo = ? WHERE idPeriferico = ?");
+            modificar.setString(1, nombre);
+            modificar.setDouble(2, precio);
+            modificar.setString(3, color);
+            modificar.setInt(4, codigo);
+            modificar.setInt(5, num);
+            
+            modificar.executeUpdate();
+            }else{
+                System.out.println("Error, ID no valido por favor ingrese un ID valido");
+            }
+            
+            
+            
+            conexion.cerrarConexion();
+        } catch (SQLException e) {
+            System.out.println("Error al editar: "+e);
         }
         
     }
@@ -505,57 +724,150 @@ public class Principal {
     public static void mostrarProductos(){
         
         
-        for(Producto prod: producto){
-            System.out.println(prod.toString());
-            System.out.println("");
+//        for(Producto prod: producto){
+//            System.out.println(prod.toString());
+//            System.out.println("");
+//        }
+        try{
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            PreparedStatement seleccionar = conx.prepareStatement("select * from videojuegos v join categorias c on v.idCategoria = c.idCategoria");
+            ResultSet consulta = seleccionar.executeQuery();
+            
+            while(consulta.next()){
+                System.out.println("ID: "+consulta.getString(1)+"\nNombre: "+consulta.getString(2)+"\nPrecio: "
+                        +consulta.getString(3)+"\nCategoria del juego: "+consulta.getString(4)+"\nClasificación: "
+                        +consulta.getString(5)+"\nCodigo: "+consulta.getString(6)+"\nCategoria del producto: "+consulta.getString(9)+"\n");
+            }
+        }catch(Exception e){
+            System.out.println("Error al mostrar datos: "+e);
+        }
+        //Conslta consolas
+        try{
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            PreparedStatement seleccionar = conx.prepareStatement("select * from consolas co join categorias c on co.idCategoria = c.idCategoria");
+            ResultSet consulta = seleccionar.executeQuery();
+            
+            while(consulta.next()){
+                System.out.println("ID: "+consulta.getString(1)+"\nNombre: "+consulta.getString(2)+"\nPrecio: "
+                        +consulta.getString(3)+"\nFabricante: "+consulta.getString(4)+"\nAlmacenamiento: "
+                        +consulta.getString(5)+"\nCodigo:"+consulta.getString(6)+"\nCategoria del producto: "
+                        +consulta.getString(9)+"\n");
+            }
+            conexion.cerrarConexion();
+        }catch(Exception e){
+            System.out.println("Error al mostrar datos: "+e);
+        }
+        //Consulta Perifericos
+        try{
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            PreparedStatement seleccionar = conx.prepareStatement("select * from periferico p join categorias c on p.idCategoria = c.idCategoria");
+            ResultSet consulta = seleccionar.executeQuery();
+            
+            while(consulta.next()){
+                System.out.println("ID: "+consulta.getString(1)+"\nNombre: "+consulta.getString(2)+"\nPrecio: "
+                        +consulta.getString(3)+"\nColor: "+consulta.getString(4)+
+                        "\nCodigo:"+consulta.getString(5)+"\nCategoria del producto: "+consulta.getString(8)+"\n");
+            }
+            conexion.cerrarConexion();
+        }catch(Exception e){
+            System.out.println("Error al mostrar datos: "+e);
         }
     }
     
     public static void mostrarJuegos() {
-        ArrayList<Producto> videojuegosArray = new ArrayList<Producto>();
+//        ArrayList<Producto> videojuegosArray = new ArrayList<Producto>();
+//        
+//        for (int i = 0; i < producto.size(); i++) {
+//            
+//            if(producto.get(i) instanceof VideoJuego){
+//                VideoJuego v = (VideoJuego) producto.get(i);
+//                videojuegosArray.add(v);
+//            }
+//        }
+//        for(Producto vj: videojuegosArray){
+//            System.out.println(vj.toString());
+//            System.out.println("");
+//        }
         
-        for (int i = 0; i < producto.size(); i++) {
+        try{
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            PreparedStatement seleccionar = conx.prepareStatement("SELECT * FROM videojuegos");
+            ResultSet consulta = seleccionar.executeQuery();
             
-            if(producto.get(i) instanceof VideoJuego){
-                VideoJuego v = (VideoJuego) producto.get(i);
-                videojuegosArray.add(v);
+            while(consulta.next()){
+                System.out.println("ID: "+consulta.getString(1)+"\nNombre: "+consulta.getString(2)+"\nPrecio: "
+                        +consulta.getString(3)+"\nCategoria del juego: "+consulta.getString(4)+"\nClasificación: "
+                        +consulta.getString(5)+"\nCodigo: "+consulta.getString(6)+"\nCategoria del producto:"+consulta.getString(7)+"\n");
             }
-        }
-        for(Producto vj: videojuegosArray){
-            System.out.println(vj.toString());
-            System.out.println("");
+        }catch(Exception e){
+            System.out.println("Error al mostrar datos: "+e);
         }
     }
     
     public static void mostrarConsolas() {
-        ArrayList<Producto> consolasArray = new ArrayList<Producto>();
+//        ArrayList<Producto> consolasArray = new ArrayList<Producto>();
+//        
+//        for (int i = 0; i < producto.size(); i++) {
+//            
+//            if(producto.get(i) instanceof Consola){
+//                Consola c = (Consola) producto.get(i);
+//                consolasArray.add(c);
+//            }
+//        }
+//        for(Producto con: consolasArray){
+//            System.out.println(con.toString());
+//            System.out.println("");
+//        }
         
-        for (int i = 0; i < producto.size(); i++) {
+        try{
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            PreparedStatement seleccionar = conx.prepareStatement("SELECT * FROM consolas");
+            ResultSet consulta = seleccionar.executeQuery();
             
-            if(producto.get(i) instanceof Consola){
-                Consola c = (Consola) producto.get(i);
-                consolasArray.add(c);
+            while(consulta.next()){
+                System.out.println("ID: "+consulta.getString(1)+"\nNombre: "+consulta.getString(2)+"\nPrecio: "
+                        +consulta.getString(3)+"\nFabricante: "+consulta.getString(4)+"\nAlmacenamiento: "
+                        +consulta.getString(5)+"\nCodigo:"+consulta.getString(6)+"\nCategoria del producto: "
+                        +consulta.getString(7)+"\n");
             }
-        }
-        for(Producto con: consolasArray){
-            System.out.println(con.toString());
-            System.out.println("");
+        }catch(Exception e){
+            System.out.println("Error al mostrar datos: "+e);
         }
     }
     
     public static void mostrarPerifericos() {
-        ArrayList<Producto> perifericoArray = new ArrayList<Producto>();
-        
-        for (int i = 0; i < producto.size(); i++) {
+//        ArrayList<Producto> perifericoArray = new ArrayList<Producto>();
+//        
+//        for (int i = 0; i < producto.size(); i++) {
+//            
+//            if(producto.get(i) instanceof Periferico){
+//                Periferico p = (Periferico) producto.get(i);
+//                perifericoArray.add(p);
+//            }
+//        }
+//        for(Producto pf: perifericoArray){
+//            System.out.println(pf.toString());
+//            System.out.println("");
+//        }
+//        
+        try{
+            Conexion conexion = Conexion.getInstance();
+            Connection conx = conexion.conectar();
+            PreparedStatement seleccionar = conx.prepareStatement("SELECT * FROM periferico");
+            ResultSet consulta = seleccionar.executeQuery();
             
-            if(producto.get(i) instanceof Periferico){
-                Periferico p = (Periferico) producto.get(i);
-                perifericoArray.add(p);
+            while(consulta.next()){
+                System.out.println("ID: "+consulta.getString(1)+"\nNombre: "+consulta.getString(2)+"\nPrecio: "
+                        +consulta.getString(3)+"\nColor: "+consulta.getString(4)+
+                        "\nCodigo:"+consulta.getString(5)+"\nCategoria del producto: "+consulta.getString(6)+"\n");
             }
-        }
-        for(Producto pf: perifericoArray){
-            System.out.println(pf.toString());
-            System.out.println("");
+        }catch(Exception e){
+            System.out.println("Error al mostrar datos: "+e);
         }
     }
     

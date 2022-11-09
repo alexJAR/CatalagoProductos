@@ -24,7 +24,7 @@ public class Conexion {
             
             Class.forName("com.mysql.jdbc.Driver");
             conexion = DriverManager.getConnection(url, username, password);
-            JOptionPane.showMessageDialog(null, "Conexion exitosa");
+//            JOptionPane.showMessageDialog(null, "Conexion exitosa");
             return conexion;
             
         } catch (Exception e) {
@@ -50,7 +50,7 @@ public class Conexion {
         try {
             
             conexion.close();
-            JOptionPane.showMessageDialog(null, "Se desconecto correctamente");
+//            JOptionPane.showMessageDialog(null, "Se desconecto correctamente");
         } catch (Exception e) {
             System.out.println("Error: "+e);
             conexion.close();
